@@ -1,6 +1,6 @@
 fe = 44100; %%freq d'éch d'un CD-ROM
 xo = rand(1,fe*10);%%Signal de parole
-
+x1 = rand(1,fe*10); %%Signal quelconque
 %Découpage du signal de parole
 
 space = 4000;
@@ -34,7 +34,7 @@ for m = 0:Mmax-1
         u(m+1,qv+N/2+1) = x(m*dn+qv+N/2+1)*w(qv+N/2+1);
     end
 end
-%%Transformation de Fourier à court terme
+%%Transformation de Fourier à court terme parole
 
 X = zeros(Mmax+1,N);
 
@@ -45,6 +45,30 @@ for m = 0:Mmax-1
         X(m+1,k) = UF(k);
    end
 end
+
+%Partie transformée court terme signal quelconque
+
+%calcul des découpes de x ramenées en 0
+p = zeros(Mmax+1,length(q));
+
+for m = 0: Mmax-1
+    for q2 = -N/2:N/2-1
+        p(m+1,q2+N/2+1) = x1(m*deltaN+q2+N/2+1)*w(q2+N/2+1);
+    end
+end
+
+%calcul du spectre court terme du son quelconque
+E = zeros(Mmac+1,N);
+
+for m=0:Mmax-1
+    pf = p(m+1,1:N);
+    PF =abs(fft(pf));
+    for k=1:N
+        E(m+1,k) = PF(k);
+    end
+end
+        
+
 
 %calcul du cepstre court terme du signal de parole
 c=zeros(Mmax+1,N);
