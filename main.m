@@ -1,17 +1,17 @@
-fe = 44100; %%freq d'éch d'un CD-ROM
+fe = 44100; %%freq d'Ã©ch d'un CD-ROM
 xo = rand(1,fe*10);%%Signal de parole
 x1 = rand(1,fe*10); %%Signal quelconque
-%Découpage du signal de parole
+%DÃ©coupage du signal de parole
 
 space = 4000;
 x = xo;%[zeros(1,space),xo];
 
-%%T < 125ms (durée max d'un phonème)
+%%T < 125ms (durÃ©e max d'un phonÃ¨me)
 %%T > 20 ms (voix basse d'un homme : 50hz)
 
 Te = 1/fe;
 %%T doit respecter T = 2^N / fe, N entier
-%%T doit être trouvé expérimentalement en respectant les contrainte
+%%T doit Ãªtre trouvÃ© expÃ©rimentalement en respectant les contrainte
 %%ci-dessus
 n = 11; % 10,11,12 correct
 N = 2^n;
@@ -34,7 +34,7 @@ for m = 0:Mmax-1
         u(m+1,qv+N/2+1) = x(m*dn+qv+N/2+1)*w(qv+N/2+1);
     end
 end
-%%Transformation de Fourier à court terme parole
+%%Transformation de Fourier Ã  court terme parole
 
 X = zeros(Mmax+1,N);
 
@@ -46,19 +46,19 @@ for m = 0:Mmax-1
    end
 end
 
-%Partie transformée court terme signal quelconque
+%Partie transformÃ©e court terme signal quelconque
 
-%calcul des découpes de x ramenées en 0
+%calcul des dÃ©coupes de x ramenÃ©es en 0
 p = zeros(Mmax+1,length(q));
 
 for m = 0: Mmax-1
     for q2 = -N/2:N/2-1
-        p(m+1,q2+N/2+1) = x1(m*deltaN+q2+N/2+1)*w(q2+N/2+1);
+        p(m+1,q2+N/2+1) = x1(m*dn+q2+N/2+1)*w(q2+N/2+1);
     end
 end
 
 %calcul du spectre court terme du son quelconque
-E = zeros(Mmac+1,N);
+E = zeros(Mmax+1,N);
 
 for m=0:Mmax-1
     pf = p(m+1,1:N);
@@ -80,7 +80,7 @@ for m = 0:Mmax-1
    end
 end
 
-%fenetrage du cepstre avec jseuil à trouver experimentalement
+%fenetrage du cepstre avec jseuil Ã  trouver experimentalement
 
 jseuil=0;
 
@@ -101,13 +101,30 @@ for m=0:Mmax-1
    end
 end
 
-%Calcul de l'estimée de la réponse fréquentielle
+%Calcul de l'estimÃ©e de la rÃ©ponse frÃ©quentielle
 H=zeros(Mmax+1,N);
 for m=0:Mmax-1
    hm = Cprime(m+1,1:N);
    HM = abs(fft(cm));
    for k = 1:N
         H(m+1,k) = exp(HM(k));
+   end
+end
+
+%Calcul de l'Action du conduit vocal:
+V=zeros(Mmax+1,N);
+for m=0:Mmax-1
+   for k = 1:N
+        V(m+1,k) = E(m+1,k)*H(m+1,k);
+   end
+end
+
+%FFT-1
+a=zeros(Mmax+1,length(q));
+for m=0:Mmax-1
+    adft= ifft(V);
+   for k = 1:N
+        a(m+1,k) = adft(k);
    end
 end
 
@@ -119,7 +136,7 @@ for n=1:length(x)-2*dn
     m = floor(n/dn);
     qv = n-m*dn;
     %fprintf('qv : %d qv-dn : %d\n',qv+dn,qv-dn);
-    x2(n) = u(m+1,qv+dn+1)+u(m+1+1,qv+1);
+    x2(n) = a(m+1,qv+dn+1)+a(m+1+1,qv+1);
 end
 %x2 = x-x2;
 xf = x2;%(space+1:length(x2));
