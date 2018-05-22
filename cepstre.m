@@ -75,18 +75,18 @@ end
 c=zeros(Mmax+1,N);
 for m = 0:Mmax-1
    tmp = X(m+1,1:N);
-   idft= abs(ifft(log(abs(tmp))));
+   idft= ifft(log(abs(tmp)));
    for k = 1:N
-        c(m+1,k) = real(idft(k));
+        c(m+1,k) = idft(k);
    end
 end
 
 %fenetrage du cepstre avec jseuil à trouver experimentalement
 
-cprime=zeros(Mmax+1,N);
-for j=jseuil:Mmax-jseuil-1
+cprime=c;%zeros(Mmax+1,N);
+for j=jseuil:N-jseuil-1
     for k = 1:N
-        cprime(j+1,k) = c(j+1,k);
+        cprime(j+1,k) = 0;%;c(j+1,k);
     end
 end
 
@@ -95,21 +95,21 @@ Cprime=zeros(Mmax+1,N);
 cm = zeros(1,N);
 for m=0:Mmax-1
     cm = cprime(m+1,1:N);
-   CM = abs(fft(cm));
+   CM = fft(cm);
    for k = 1:N
         Cprime(m+1,k) = CM(k);
    end
 end
 
 %Calcul de l'estimée de la réponse fréquentielle
-H=zeros(Mmax+1,N);
-for m=0:Mmax-1
-   hm = Cprime(m+1,1:N);
-   HM = abs(fft(cm));
-   for k = 1:N
-        H(m+1,k) = exp(HM(k));
-   end
-end
+H=exp(Cprime);%zeros(Mmax+1,N);
+%for m=0:Mmax-1
+%   hm = Cprime(m+1,1:N);
+%   HM = fft(cm);
+%   for k = 1:N
+%        H(m+1,k) = exp(HM(k));
+%   end
+%end
 
 %Calcul de l'Action du conduit vocal:
 V=zeros(Mmax+1,N);
