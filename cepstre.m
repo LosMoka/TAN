@@ -1,4 +1,4 @@
-function [ a,dn ] = cepstre( xo,x1 )
+function [ a,dn, u ] = cepstre( xo,x1,jseuil, T )
 %CEPSTRE Summary of this function goes here
 %   Detailed explanation goes here
 fe = 44100; %%freq d'éch d'un CD-ROM
@@ -11,12 +11,11 @@ x = xo;%[zeros(1,space),xo];
 
 %%T < 125ms (durée max d'un phonème)
 %%T > 20 ms (voix basse d'un homme : 50hz)
-
 Te = 1/fe;
 %%T doit respecter T = 2^N / fe, N entier
 %%T doit être trouvé expérimentalement en respectant les contrainte
 %%ci-dessus
-n = 11; % 10,11,12 correct
+n = 10; % 10,11,12 correct
 N = 2^n;
 T = N/fe;
 
@@ -41,11 +40,11 @@ end
 
 X = zeros(Mmax+1,N);
 
-for m = 0:Mmax-1
-   uf = u(m+1,1:N);
-   UF = abs(fft(uf));
+for m = 1:Mmax
+   uf = u(m,1:N);
+   UF = fft(uf);
    for k = 1:N
-        X(m+1,k) = UF(k);
+        X(m,k) = UF(k);
    end
 end
 
@@ -65,13 +64,12 @@ E = zeros(Mmax+1,N);
 
 for m=0:Mmax-1
     pf = p(m+1,1:N);
-    PF =abs(fft(pf));
+    PF =fft(pf);
     for k=1:N
         E(m+1,k) = PF(k);
     end
 end
         
-
 
 %calcul du cepstre court terme du signal de parole
 c=zeros(Mmax+1,N);
@@ -84,8 +82,6 @@ for m = 0:Mmax-1
 end
 
 %fenetrage du cepstre avec jseuil à trouver experimentalement
-
-jseuil=0;
 
 cprime=zeros(Mmax+1,N);
 for j=jseuil:Mmax-jseuil-1
@@ -125,12 +121,15 @@ end
 
 %FFT-1
 a=zeros(Mmax+1,length(q));
-for m=0:Mmax-1
-    adft= abs(ifft(V));
+
+for m = 1:Mmax
+   af = V(m,1:N);
+   adft = ifft(af);
    for k = 1:N
-        a(m+1,k) = real(adft(k));
+        a(m,k) = adft(k);
    end
 end
+
 
 end
 

@@ -9,10 +9,8 @@ al =size(a);
 for n=1:length-2*dn
     m = floor(n/dn);
     qv = n-m*dn;
-    %fprintf('qv : %d qv-dn : %d\n',qv+dn,qv-dn);
-    if m+2<al(1)
+    %fprintf('qv : %d qv-dn : %d\n',qv+dn,qv-dn)
     x2(n) = a(m+1,qv+dn+1)+a(m+1+1,qv+1);
-    end
 end
 %x2 = x-x2;
 xf = x2;%(space+1:length(x2));
