@@ -1,4 +1,4 @@
-function [ a,dn, u ] = cepstre( xo,x1,jseuil, T )
+function [ a,dn,x ] = cepstre( xo,x1,jseuil )
 %CEPSTRE Summary of this function goes here
 %   Detailed explanation goes here
 fe = 44100; %%freq d'éch d'un CD-ROM
@@ -8,14 +8,19 @@ fe = 44100; %%freq d'éch d'un CD-ROM
 
 space = 4000;
 x = xo;%[zeros(1,space),xo];
-
+ux1 = x1;
+while length(x1)<length(x)
+   x1 = [x1;ux1]; 
+end
+z_ = zeros(1, length(x)-length(x1));
+xo = [xo z_];
 %%T < 125ms (durée max d'un phonème)
 %%T > 20 ms (voix basse d'un homme : 50hz)
 Te = 1/fe;
 %%T doit respecter T = 2^N / fe, N entier
 %%T doit être trouvé expérimentalement en respectant les contrainte
 %%ci-dessus
-n = 10; % 10,11,12 correct
+n = 11; % 10,11,12 correct
 N = 2^n;
 T = N/fe;
 
@@ -38,7 +43,7 @@ for m = 0:Mmax-1
 end
 %%Transformation de Fourier à court terme parole
 
-X = zeros(Mmax+1,N);
+X = complex(zeros(Mmax+1,N));
 
 for m = 1:Mmax
    uf = u(m,1:N);
@@ -47,6 +52,9 @@ for m = 1:Mmax
         X(m,k) = UF(k);
    end
 end
+
+figure(6);
+plot(1:400,abs(X(50,1:400)));
 
 %Partie transformée court terme signal quelconque
 
@@ -60,7 +68,7 @@ for m = 0: Mmax-1
 end
 
 %calcul du spectre court terme du son quelconque
-E = zeros(Mmax+1,N);
+E = complex(zeros(Mmax+1,N));
 
 for m=0:Mmax-1
     pf = p(m+1,1:N);
@@ -69,10 +77,13 @@ for m=0:Mmax-1
         E(m+1,k) = PF(k);
     end
 end
+
+%figure(2)
+%plot(1:N,E);
         
 
 %calcul du cepstre court terme du signal de parole
-c=zeros(Mmax+1,N);
+c=complex(zeros(Mmax+1,N));
 for m = 0:Mmax-1
    tmp = X(m+1,1:N);
    idft= ifft(log(abs(tmp)));
@@ -81,17 +92,25 @@ for m = 0:Mmax-1
    end
 end
 
+figure(3)
+csize = size(c);
+plot((-N/2+10):(N/2-10),c(50,20:N));
+
 %fenetrage du cepstre avec jseuil à trouver experimentalement
 
 cprime=c;%zeros(Mmax+1,N);
 for j=jseuil:N-jseuil-1
-    for k = 1:N
-        cprime(j+1,k) = 0;%;c(j+1,k);
+    for k = 1:csize(1)
+        cprime(k,j) = 0;%c(k,j);
     end
 end
+figure(4)
+csize = size(cprime);
+plot(21:N,cprime(50,21:N))
+
 
 %calcul du logarithme de la reponse frequentielle
-Cprime=zeros(Mmax+1,N);
+Cprime=complex(zeros(Mmax+1,N));
 cm = zeros(1,N);
 for m=0:Mmax-1
     cm = cprime(m+1,1:N);
@@ -100,6 +119,9 @@ for m=0:Mmax-1
         Cprime(m+1,k) = CM(k);
    end
 end
+
+%figure(4);
+%plot(1:N,Cprime);
 
 %Calcul de l'estimée de la réponse fréquentielle
 H=exp(Cprime);%zeros(Mmax+1,N);
@@ -110,14 +132,20 @@ H=exp(Cprime);%zeros(Mmax+1,N);
 %        H(m+1,k) = exp(HM(k));
 %   end
 %end
+figure(5)
+csize = size(cprime);
+plot(1:400,H(50,1:400))
 
 %Calcul de l'Action du conduit vocal:
-V=zeros(Mmax+1,N);
+V=complex(zeros(Mmax+1,N));
 for m=0:Mmax-1
    for k = 1:N
         V(m+1,k) = E(m+1,k)*H(m+1,k);
    end
 end
+
+figure(15);
+plot(1:118,V);
 
 %FFT-1
 a=zeros(Mmax+1,length(q));
@@ -126,7 +154,7 @@ for m = 1:Mmax
    af = V(m,1:N);
    adft = ifft(af);
    for k = 1:N
-        a(m,k) = adft(k);
+        a(m,k) = real(adft(k));
    end
 end
 

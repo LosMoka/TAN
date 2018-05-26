@@ -1,8 +1,11 @@
 fe = 44100; %%freq d'éch d'un CD-ROM
-[xo,fx0] = audioread('test.wav');%%Signal de parole
-[x1,fx1] = audioread('chute2s.wav'); %%Signal quelconque
+[xo,fx0] = audioread('johan2.wav');%%Signal de parole
+[x1,fx1] = audioread('chute.wav'); %%Signal quelconque
 
-[a,dn,u] = cepstre(xo,x1,512*3/4);
-xf = rebuild(a,length(x1),dn);
+%xo = xo / mean(xo);
+%x1 = x1 / mean(x1);
+
+[a,dn,x] = cepstre(xo,x1,60);
+xf = rebuild(a,length(x),dn);
 
 soundsc(real(xf),fe);
